@@ -36,11 +36,12 @@ options:
         - Name of the service.
     state:
         required: false
-        choices: [ started, stopped, restarted, reloaded ]
+        choices: [ started, stopped, status restarted, reloaded ]
         description:
           - C(started)/C(stopped) are idempotent actions that will not run
-            commands unless necessary.  C(restarted) will always bounce the
-            service.  C(reloaded) will always reload. B(At least one of state
+            commands unless necessary. C(status) would report the status of 
+            the service, C(restarted) will always bounce the service. 
+            C(reloaded) will always reload. B(At least one of state
             and enabled are required.)
     sleep:
         required: false
@@ -1455,7 +1456,7 @@ def main():
     module = AnsibleModule(
         argument_spec = dict(
             name = dict(required=True),
-            state = dict(choices=['running', 'started', 'stopped', 'restarted', 'reloaded']),
+            state = dict(choices=['running', 'started', 'stopped', 'status', 'restarted', 'reloaded']),
             sleep = dict(required=False, type='int', default=None),
             pattern = dict(required=False, default=None),
             enabled = dict(type='bool'),
@@ -1500,6 +1501,9 @@ def main():
         service.check_ps()
     else:
         service.get_service_status()
+
+    if module.params['state'] == 'status':
+        module.exit_json(state=service.running)
 
     # Calculate if request will change service state
     service.check_service_changed()
